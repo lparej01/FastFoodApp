@@ -1,0 +1,30 @@
+# Visual Studio / Directorios de compilación
+[Oo]bj/
+[Bb]in/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Archivos de caché y temporales de C# / .NET
+projectLock.json
+[Tt]humbs.db
+*._gs
+.gradle/
+build/
+
+# Base de datos SQLite local (opcional: si prefieres no subir datos de prueba locales)
+# *.db
+# *.sqlite
+# *.sqlite3
+
+# Carpetas de dependencias de Node (por si usas algo de frontend web/Angular)
+node_modules/
+dist/
+.angular/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
