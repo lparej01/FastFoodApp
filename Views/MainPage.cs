@@ -64,7 +64,12 @@ public class MainPage : ContentPage
         {
             await Navigation.PushAsync(new PurchaseView(_databaseService));
         };
-        btnPedidos.Clicked += async (s, e) => await DisplayAlert("Pedidos", "Aquí tomaremos los pedidos de los clientes.", "OK");
+
+        btnPedidos.Clicked += async (s, e) =>
+        {
+            await Navigation.PushAsync(new OrderPage(_databaseService));
+        };
+
 
         Content = new VerticalStackLayout
         {
