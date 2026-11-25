@@ -23,9 +23,7 @@ public class DatabaseService
             await _database.CreateTableAsync<User>();
             await _database.CreateTableAsync<PlatoMenu>();
             await _database.CreateTableAsync<Categoria>();
-
-            await _database.CreateTableAsync<InventoryItem>();            
-
+            await _database.CreateTableAsync<InventoryItem>();
             await _database.CreateTableAsync<Recipe>();
             await _database.CreateTableAsync<Purchase>();
             await _database.CreateTableAsync<PurchaseDetail>();
@@ -62,27 +60,13 @@ public class DatabaseService
                               .FirstOrDefaultAsync();
     }
 
-<<<<<<< HEAD
-    public Task<int> SavePlatoAsync(PlatoMenu plato)
-    {
-=======
     public async Task<int> SavePlatoAsync(PlatoMenu plato)
     {
         await Init();
->>>>>>> 7ac876e (realizado modulo de pedido nuevas paginas)
         // Si el plato ya tiene ID, lo actualiza; si es 0, lo inserta nuevo.
         // Asegúrate de que guarde todo el objeto para que no se pierda el CategoriaId.
         if (plato.Id != 0)
         {
-<<<<<<< HEAD
-            return _database.UpdateAsync(plato);
-        }
-        else
-        {
-            return _database.InsertAsync(plato);
-        }
-    }
-=======
             return await _database.UpdateAsync(plato);
         }
         else
@@ -91,38 +75,11 @@ public class DatabaseService
         }
     }
 
->>>>>>> 7ac876e (realizado modulo de pedido nuevas paginas)
     public async Task<List<PlatoMenu>> GetPlatosAsync()
     {
         await Init();
         return await _database.Table<PlatoMenu>().ToListAsync();
     }
-<<<<<<< HEAD
-    // --- MÉTODOS PARA CATEGORÍAS ---
-
-    // 1. Obtener todas las categorías para llenar el Picker
-    public Task<List<Categoria>> GetCategoriasAsync()
-    {
-        // Asegúrate de usar _database (o la variable que uses para tu conexión SQLiteAsyncConnection)
-        return _database.Table<Categoria>().ToListAsync();
-    }
-
-    // 2. Guardar una nueva categoría (por si quieres crear una pantalla para registrarlas)
-    public Task<int> SaveCategoriaAsync(Categoria categoria)
-    {
-        return _database.InsertAsync(categoria);
-    }
-    // --- MÉTODOS PARA EL CONTROL DE INVENTARIO ---
-
-    // 1. Obtener todos los elementos del inventario
-   
-    public async Task<List<InventoryItem>> GetInventoryItemsAsync()
-    {
-        return await _database.Table<InventoryItem>().ToListAsync();
-    }
-
-
-=======
 
     // --- MÉTODOS PARA CATEGORÍAS ---
 
@@ -149,7 +106,6 @@ public class DatabaseService
         return await _database.Table<InventoryItem>().ToListAsync();
     }
 
->>>>>>> 7ac876e (realizado modulo de pedido nuevas paginas)
     // 2. Guardar o actualizar un elemento del inventario
     public async Task<int> SaveInventoryItemAsync(InventoryItem item)
     {
@@ -164,46 +120,6 @@ public class DatabaseService
         }
     }
 
-<<<<<<< HEAD
-    public Task<int> DeleteInventoryItemAsync(InventoryItem item)
-    {
-        return _database.DeleteAsync(item);
-    }
-
-   
-
-    public async Task RegisterPurchaseAsync(int ingredientId, decimal quantity, decimal unitCost)
-    {
-    // 1. Buscar el ingrediente actual en el inventario
-    var inventoryItem = await _database.Table<InventoryItem>()
-                                       .Where(i => i.Id == ingredientId)
-                                       .FirstOrDefaultAsync();
-
-    if (inventoryItem != null)
-    {
-        // 2. Calcular costos
-        decimal totalCost = quantity * unitCost;
-
-        // 3. Crear el registro de la compra
-        var purchase = new PurchaseItem
-        {
-            IngredientId = ingredientId,
-            IngredientName = inventoryItem.Nombre,
-            QuantityPurchased = quantity,
-            UnitCost = unitCost,
-            TotalCost = totalCost,
-            PurchaseDate = DateTime.Now
-        };
-
-        await _database.InsertAsync(purchase);
-
-            // 4. Actualizar el stock del inventario (sumando lo comprado)
-         inventoryItem.StockActual += (float)quantity; 
-        await _database.UpdateAsync(inventoryItem);
-    }
-  }
-   
-=======
     public async Task<int> DeleteInventoryItemAsync(InventoryItem item)
     {
         await Init();
@@ -242,15 +158,10 @@ public class DatabaseService
             await _database.UpdateAsync(inventoryItem);
         }
     }
->>>>>>> 7ac876e (realizado modulo de pedido nuevas paginas)
 
     // 2. Obtener el historial de compras recientes
     public async Task<List<PurchaseItem>> GetPurchasesAsync()
     {
-<<<<<<< HEAD
-        return await _database.Table<PurchaseItem>().OrderByDescending(p => p.PurchaseDate).ToListAsync();
-    }
-=======
         await Init();
         return await _database.Table<PurchaseItem>().OrderByDescending(p => p.PurchaseDate).ToListAsync();
     }
@@ -302,5 +213,4 @@ public class DatabaseService
         await Init();
         return await _database.UpdateAsync(item);
     }
->>>>>>> 7ac876e (realizado modulo de pedido nuevas paginas)
 }
