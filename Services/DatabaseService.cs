@@ -213,4 +213,68 @@ public class DatabaseService
         await Init();
         return await _database.UpdateAsync(item);
     }
+    public async Task<bool> EmailExistsAsync(string correo)
+    {
+        await Init();
+        var correoNormalizado = correo.Trim().ToLowerInvariant();
+        var existing = await _database.Table<User>()
+                                      .Where(u => u.Correo.ToLower() == correoNormalizado)
+                                      .FirstOrDefaultAsync();
+        return existing != null;
+    }
+
+    public async Task<(bool Success, string Message)> RegisterUserAsync(string nombre, string correo, string password, string rol = "Cajero")
+    {
+        await Init();
+
+        nombre = nombre?.Trim() ?? string.Empty;
+        correo = correo?.Trim().ToLowerInvariant() ?? string.Empty;
+        password = password ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(correo) || string.IsNullOrWhiteSpace(password))
+            return (false, "Completa nombre, correo y contraseña.");
+
+        if (password.Length < 4)
+            return (false, "La contraseña debe tener al menos 4 caracteres.");
+
+        if (await EmailExistsAsync(correo))
+            return (false, "Ese correo ya está registrado.");
+
+        var newUser = new User
+        {
+            Nombre = nombre,
+            Correo = correo,
+            Password = password,
+            Rol = rol
+        };
+
+        await _database.InsertAsync(newUser);
+        return (true, "Usuario registrado correctamente.");
+    }
+
+    public async Task<(bool Success, string Message)> ResetPasswordAsync(string correo, string nombre, string newPassword)
+    {
+        await Init();
+
+        correo = correo?.Trim().ToLowerInvariant() ?? string.Empty;
+        nombre = nombre?.Trim() ?? string.Empty;
+        newPassword = newPassword ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(correo) || string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(newPassword))
+            return (false, "Completa el correo, el nombre registrado y la nueva contraseña.");
+
+        if (newPassword.Length < 4)
+            return (false, "La nueva contraseña debe tener al menos 4 caracteres.");
+
+        var user = await _database.Table<User>()
+                                  .Where(u => u.Correo.ToLower() == correo)
+                                  .FirstOrDefaultAsync();
+
+        if (user == null || !string.Equals(user.Nombre?.Trim(), nombre, StringComparison.OrdinalIgnoreCase))
+            return (false, "No se encontró un usuario que coincida con ese correo y nombre.");
+
+        user.Password = newPassword;
+        await _database.UpdateAsync(user);
+        return (true, "Contraseña actualizada correctamente.");
+    }
 }

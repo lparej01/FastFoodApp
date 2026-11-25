@@ -39,7 +39,28 @@ public class MainPage : ContentPage
             FontAttributes = FontAttributes.Bold,
             HeightRequest = 50
         };
+        var btnCerrarSesion = new Button
+        {
+            Text = "🚪 Cerrar sesión",
+            BackgroundColor = Colors.Crimson,
+            TextColor = Colors.White,
+            FontAttributes = FontAttributes.Bold,
+            HeightRequest = 50
+        };
 
+        btnCerrarSesion.Clicked += async (_, _) =>
+        {
+            bool confirmar = await DisplayAlert(
+                "Cerrar sesión",
+                "¿Deseas salir de tu sesión actual?",
+                "Sí",
+                "No"
+            );
+
+            if (!confirmar) return;
+
+            Application.Current.MainPage = new NavigationPage(new LoginPage(_databaseService));
+        };
         var btnPedidos = new Button
         {
             Text = "📝 Tomar Pedidos",
@@ -96,7 +117,8 @@ public class MainPage : ContentPage
                 btnCatalogo,
                 btnInventario,
                 btnCompras,
-                btnPedidos
+                btnPedidos,
+                btnCerrarSesion
             }
         };
        

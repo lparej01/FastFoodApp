@@ -60,6 +60,29 @@ public class LoginPage : ContentPage
             }
         };
 
+        var registerButton = new Button
+        {
+            Text = "Crear cuenta",
+            BackgroundColor = Colors.Transparent,
+            TextColor = Colors.ForestGreen,
+            FontAttributes = FontAttributes.Bold
+        };
+        registerButton.Clicked += async (_, _) =>
+        {
+            await Navigation.PushAsync(new RegisterPage(_databaseService));
+        };
+
+        var recoverButton = new Button
+        {
+            Text = "¿Olvidaste tu contraseña?",
+            BackgroundColor = Colors.Transparent,
+            TextColor = Colors.DarkBlue
+        };
+        recoverButton.Clicked += async (_, _) =>
+        {
+            await Navigation.PushAsync(new RecoverPasswordPage(_databaseService));
+        };
+
         Content = new VerticalStackLayout
         {
             Padding = 40,
@@ -81,10 +104,12 @@ public class LoginPage : ContentPage
                     TextColor = Colors.Gray,
                     HorizontalOptions = LayoutOptions.Center
                 },
-                new BoxView { HeightRequest = 20 }, // Espaciador
+               new BoxView { HeightRequest = 20 }, // Espaciador
                 emailEntry,
                 passwordEntry,
-                loginButton
+                loginButton,
+                registerButton,
+                recoverButton
             }
         };
     }
