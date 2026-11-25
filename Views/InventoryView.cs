@@ -33,7 +33,6 @@ public class InventoryView : ContentPage
         EditCommand = new Command<InventoryItem>(OnEditItem);
         DeleteCommand = new Command<InventoryItem>(OnDeleteItem);
 
-        // Inicialización de campos de entrada
         _nombreEntry = new Entry { Placeholder = "Nombre del ingrediente (ej. Pollo, Arroz)" };
         _stockEntry = new Entry { Placeholder = "Cantidad actual (ej. 15.5)", Keyboard = Keyboard.Numeric };
 
@@ -60,13 +59,12 @@ public class InventoryView : ContentPage
             FontAttributes = FontAttributes.Bold
         };
 
-        // Layout para la lista de inventario adaptado a ScrollView
         _listaInventarioLayout = new VerticalStackLayout
         {
             Spacing = 8
         };
 
-        BindableLayout.SetItemsSource(_listaInventarioLayout, _inventoryItems);
+        // Configurar ItemTemplate ANTES de ItemsSource
         BindableLayout.SetItemTemplate(_listaInventarioLayout, new DataTemplate(() =>
         {
             var mainGrid = new Grid
@@ -82,17 +80,26 @@ public class InventoryView : ContentPage
                 ColumnSpacing = 8
             };
 
-            // Columna 0: Información del producto
             var stackIzq = new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center };
 
-            var lblNombre = new Label { FontAttributes = FontAttributes.Bold, FontSize = 16 };
+            var lblNombre = new Label
+            {
+                FontAttributes = FontAttributes.Bold,
+                FontSize = 16,
+                TextColor = Colors.Black
+            };
             lblNombre.SetBinding(Label.TextProperty, "Nombre");
 
             var lblMinimo = new Label { FontSize = 12, TextColor = Colors.Gray };
-            var multiBindingMin = new MultiBinding { StringFormat = "Mínimo: {0} {1}" };
-            multiBindingMin.Bindings.Add(new Binding("StockMinimo"));
-            multiBindingMin.Bindings.Add(new Binding("UnidadMedida"));
-            lblMinimo.SetBinding(Label.TextProperty, multiBindingMin);
+            var formattedMinimo = new FormattedString();
+            formattedMinimo.Spans.Add(new Span { Text = "Mínimo: " });
+            var spanMinValor = new Span();
+            spanMinValor.SetBinding(Span.TextProperty, "StockMinimo");
+            var spanMinUnidad = new Span();
+            spanMinUnidad.SetBinding(Span.TextProperty, "UnidadMedida", stringFormat: " {0}");
+            formattedMinimo.Spans.Add(spanMinValor);
+            formattedMinimo.Spans.Add(spanMinUnidad);
+            lblMinimo.FormattedText = formattedMinimo;
 
             var lblStockYUnidad = new Label
             {
@@ -100,16 +107,20 @@ public class InventoryView : ContentPage
                 FontSize = 13,
                 TextColor = Colors.DarkSlateGray
             };
-            var multiBinding = new MultiBinding { StringFormat = "Stock Actual: {0} {1}" };
-            multiBinding.Bindings.Add(new Binding("StockActual"));
-            multiBinding.Bindings.Add(new Binding("UnidadMedida"));
-            lblStockYUnidad.SetBinding(Label.TextProperty, multiBinding);
+            var formattedStock = new FormattedString();
+            formattedStock.Spans.Add(new Span { Text = "Stock Actual: " });
+            var spanStockValor = new Span();
+            spanStockValor.SetBinding(Span.TextProperty, "StockActual");
+            var spanStockUnidad = new Span();
+            spanStockUnidad.SetBinding(Span.TextProperty, "UnidadMedida", stringFormat: " {0}");
+            formattedStock.Spans.Add(spanStockValor);
+            formattedStock.Spans.Add(spanStockUnidad);
+            lblStockYUnidad.FormattedText = formattedStock;
 
             stackIzq.Children.Add(lblNombre);
             stackIzq.Children.Add(lblMinimo);
             stackIzq.Children.Add(lblStockYUnidad);
 
-            // Columna 1: Botón Editar
             var btnEditar = new Button
             {
                 Text = "✏️",
@@ -123,7 +134,6 @@ public class InventoryView : ContentPage
             btnEditar.Command = EditCommand;
             btnEditar.SetBinding(Button.CommandParameterProperty, new Binding("."));
 
-            // Columna 2: Botón Eliminar
             var btnEliminar = new Button
             {
                 Text = "🗑️",
@@ -144,7 +154,8 @@ public class InventoryView : ContentPage
             return mainGrid;
         }));
 
-        // Lógica del botón Guardar / Actualizar
+        BindableLayout.SetItemsSource(_listaInventarioLayout, _inventoryItems);
+
         _btnGuardar.Clicked += async (s, e) =>
         {
             if (string.IsNullOrWhiteSpace(_nombreEntry.Text) ||
@@ -166,7 +177,7 @@ public class InventoryView : ContentPage
                     Id = _idItemEnEdicion ?? 0,
                     Nombre = _nombreEntry.Text.Trim(),
                     StockActual = stock,
-                    UnidadMedida = _unidadPicker.SelectedItem.ToString(),
+                    UnidadMedida = _unidadPicker.SelectedItem.ToString() ?? string.Empty,
                     StockMinimo = minStock
                 };
 
@@ -185,7 +196,6 @@ public class InventoryView : ContentPage
             }
         };
 
-        // Diseño general de la página envuelto en ScrollView
         Content = new ScrollView
         {
             Content = new VerticalStackLayout

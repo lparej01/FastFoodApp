@@ -10,7 +10,7 @@ public class MainPage : ContentPage
     public MainPage(DatabaseService databaseService)
     {
         _databaseService = databaseService;
-        Title = "Menú Principal - FastFoodApp";
+        Title = "Menú Principal - Pollos Parejo";
 
         // Botones de navegación para las funciones del sistema
         var btnCatalogo = new Button
@@ -39,6 +39,25 @@ public class MainPage : ContentPage
             FontAttributes = FontAttributes.Bold,
             HeightRequest = 50
         };
+
+        var btnPedidos = new Button
+        {
+            Text = "📝 Tomar Pedidos",
+            BackgroundColor = Colors.ForestGreen,
+            TextColor = Colors.White,
+            FontAttributes = FontAttributes.Bold,
+            HeightRequest = 50
+        };
+
+        var btnRecetas = new Button
+        {
+            Text = "📋 Recetas por Plato",
+            BackgroundColor = Colors.Teal,
+            TextColor = Colors.White,
+            FontAttributes = FontAttributes.Bold,
+            HeightRequest = 50
+        };
+
         var btnCerrarSesion = new Button
         {
             Text = "🚪 Cerrar sesión",
@@ -61,36 +80,36 @@ public class MainPage : ContentPage
 
             Application.Current.MainPage = new NavigationPage(new LoginPage(_databaseService));
         };
-        var btnPedidos = new Button
-        {
-            Text = "📝 Tomar Pedidos",
-            BackgroundColor = Colors.ForestGreen,
-            TextColor = Colors.White,
-            FontAttributes = FontAttributes.Bold,
-            HeightRequest = 50
-        };
 
-        // Catalogo)
+        // Catálogo
         btnCatalogo.Clicked += async (s, e) =>
         {
             await Navigation.PushAsync(new MenuCatalogPage(_databaseService));
         };
-        // <-- Iventario -->
+
+        // Inventario
         btnInventario.Clicked += async (s, e) =>
         {
             await Navigation.PushAsync(new InventoryView(_databaseService));
         };
-        // <-- Compras -->
+
+        // Compras
         btnCompras.Clicked += async (s, e) =>
         {
             await Navigation.PushAsync(new PurchaseView(_databaseService));
         };
 
+        // Pedidos
         btnPedidos.Clicked += async (s, e) =>
         {
             await Navigation.PushAsync(new OrderPage(_databaseService));
         };
 
+        // Recetas por Plato
+        btnRecetas.Clicked += async (s, e) =>
+        {
+            await Navigation.PushAsync(new RecipePage(_databaseService));
+        };
 
         Content = new VerticalStackLayout
         {
@@ -118,11 +137,9 @@ public class MainPage : ContentPage
                 btnInventario,
                 btnCompras,
                 btnPedidos,
+                btnRecetas,
                 btnCerrarSesion
             }
         };
-       
     }
-   
-   
 }

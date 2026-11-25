@@ -60,11 +60,11 @@ public class DatabaseService
                               .FirstOrDefaultAsync();
     }
 
+
     public async Task<int> SavePlatoAsync(PlatoMenu plato)
     {
         await Init();
         // Si el plato ya tiene ID, lo actualiza; si es 0, lo inserta nuevo.
-        // Asegúrate de que guarde todo el objeto para que no se pierda el CategoriaId.
         if (plato.Id != 0)
         {
             return await _database.UpdateAsync(plato);
@@ -73,6 +73,11 @@ public class DatabaseService
         {
             return await _database.InsertAsync(plato);
         }
+    }
+    public async Task<int> DeletePlatoAsync(PlatoMenu plato)
+    {
+        await Init();
+        return await _database.DeleteAsync(plato);
     }
 
     public async Task<List<PlatoMenu>> GetPlatosAsync()
@@ -213,6 +218,7 @@ public class DatabaseService
         await Init();
         return await _database.UpdateAsync(item);
     }
+
     public async Task<bool> EmailExistsAsync(string correo)
     {
         await Init();
@@ -276,5 +282,97 @@ public class DatabaseService
         user.Password = newPassword;
         await _database.UpdateAsync(user);
         return (true, "Contraseña actualizada correctamente.");
+    }
+
+    public async Task<(bool Success, string Message, List<string> LowStockAlerts)> ConfirmarPedidoYDescontarStockAsync(
+        Order order,
+        IEnumerable<OrderDetail> details)
+    {
+        await Init();
+
+        var detallesLista = details.ToList();
+        if (!detallesLista.Any())
+        {
+            return (false, "El pedido no tiene platos agregados.", new List<string>());
+        }
+
+        // 1. Acumular consumo total por InventoryItemId según recetas de cada plato vendido
+        var consumoPorIngrediente = new Dictionary<int, float>();
+
+        foreach (var detail in detallesLista)
+        {
+            var recetas = await GetRecipesByMenuItemIdAsync(detail.MenuItemId);
+            foreach (var receta in recetas)
+            {
+                float consumoTotal = (float)receta.CantidadRequerida * detail.Cantidad;
+                if (consumoPorIngrediente.ContainsKey(receta.InventoryItemId))
+                {
+                    consumoPorIngrediente[receta.InventoryItemId] += consumoTotal;
+                }
+                else
+                {
+                    consumoPorIngrediente[receta.InventoryItemId] = consumoTotal;
+                }
+            }
+        }
+
+        // 2. Verificar existencia y stock suficiente antes de guardar
+        var itemsParaActualizar = new List<(InventoryItem Item, float NuevoStock)>();
+
+        foreach (var kvp in consumoPorIngrediente)
+        {
+            var item = await GetInventoryItemByIdAsync(kvp.Key);
+            if (item == null)
+            {
+                return (false, $"No se encontró un insumo del inventario (ID {kvp.Key}).", new List<string>());
+            }
+
+            if (item.StockActual < kvp.Value)
+            {
+                return (false,
+                    $"Stock insuficiente de '{item.Nombre}': disponible {item.StockActual} {item.UnidadMedida}, necesario {kvp.Value} {item.UnidadMedida}.",
+                    new List<string>());
+            }
+
+            itemsParaActualizar.Add((item, item.StockActual - kvp.Value));
+        }
+
+        // 3. Guardar pedido y detalles con su OrderId
+        await SaveOrderAsync(order);
+        foreach (var detail in detallesLista)
+        {
+            detail.OrderId = order.Id;
+            await SaveOrderDetailAsync(detail);
+        }
+
+        // 4. Descontar del almacén y detectar alertas de stock mínimo
+        var alertasStockBajo = new List<string>();
+
+        foreach (var (item, nuevoStock) in itemsParaActualizar)
+        {
+            item.StockActual = nuevoStock;
+            await UpdateInventoryItemAsync(item);
+
+            if (item.StockActual <= item.StockMinimo)
+            {
+                alertasStockBajo.Add($"{item.Nombre} ({item.StockActual} {item.UnidadMedida} / mín: {item.StockMinimo})");
+            }
+        }
+
+        return (true, "Pedido guardado y stock descontado del almacén correctamente.", alertasStockBajo);
+    }
+    public async Task<int> SaveRecipeAsync(Recipe recipe)
+    {
+        await Init();
+        if (recipe.Id != 0)
+            return await _database.UpdateAsync(recipe);
+
+        return await _database.InsertAsync(recipe);
+    }
+
+    public async Task<int> DeleteRecipeAsync(Recipe recipe)
+    {
+        await Init();
+        return await _database.DeleteAsync(recipe);
     }
 }
